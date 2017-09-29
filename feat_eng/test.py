@@ -11,11 +11,9 @@ from nltk import word_tokenize
 from nltk.stem import WordNetLemmatizer,PorterStemmer
 from nltk import pos_tag
 from nltk.tokenize import RegexpTokenizer
-
-# import pickle as pickle
-#
-# with open("data.pickle", "rb") as file:
-#     vocab  = pickle.load(file)
+import omdb
+omdb.set_default('apikey', '3c5f8e38')
+# random.seed(1701)
 
 class LemmaToken(object):
     def __init__(self):
@@ -26,7 +24,6 @@ class LemmaToken(object):
     def __call__(self, doc):
         # return [self.wnl.stem(t) for t in doc]
         return [self.wnl.stem(t) for t in self.tokenizer.tokenize(doc)]
-        # return [self.wnl.stem(t) for t in self.tokenizer.tokenize(doc)]
         # return [self.wnl.lemmatize(i, pos=j[0].lower()) if j[0].lower() in ['r', 'n', 'v']
         #         else self.wnl.lemmatize(i) for i, j in pos_tag(self.tokenizer.tokeni
         # ze(doc))]
@@ -38,22 +35,15 @@ kTEXT_FIELD = 'sentence'
 
 class Featurizer:
     def __init__(self):
-        self.vectorizer = TfidfVectorizer(max_features=70000,
-                                          max_df=0.6,
-                                          ngram_range=(1,4),
-                                          analyzer='word',
-                                          # min_df=5,
-                                          # stop_words='english',
-                                          # strip_accents='ascii',
-                                          # token_pattern=r'\w+',
-                                          tokenizer=LemmaToken())
-        # self.vectorizer = TfidfVectorizer(ngram_range=(1,2),
-        #                                   min_df=2,
-        #                                   # max_features=25000,
-        #                                   analyzer='word',
-        #                                   stop_words='english',
-        #                                   strip_accents='ascii',
-        #                                   tokenizer=LemmaToken())
+        self.vectorizer = TfidfVectorizer(ngram_range = (1, 2) ,
+                                          min_df = 2 ,
+                                          sublinear_tf = True ,
+                                          # max_features = 20000 ,
+                                          analyzer = 'word' ,
+                                          stop_words = 'english' ,
+                                          strip_accents = 'ascii' ,
+                                          tokenizer = LemmaToken())
+
     def train_feature(self, examples):
         return self.vectorizer.fit_transform(examples)
 
@@ -62,6 +52,7 @@ class Featurizer:
 
     def show_top10(self, classifier, categories):
         feature_names = np.asarray(self.vectorizer.get_feature_names())
+        print(len(feature_names))
         if len(categories) == 2:
             top10 = np.argsort(classifier.coef_[0])[-10:]
             bottom10 = np.argsort(classifier.coef_[0])[:10]
@@ -76,7 +67,11 @@ if __name__ == "__main__":
 
     # Cast to list to keep it all in memory
     train = list(DictReader(open("../data/spoilers/train.csv", 'r')))
-    test = list(DictReader(open("../data/spoilers/test.csv", 'r')))
+    # test = list(DictReader(open("../data/spoilers/test.csv", 'r')))
+    random.shuffle(train)
+    # p=0.10
+    test = train[-int(len(train)*0.10):]
+    train = train[:-int(len(train)*0.10)]
 
     feat = Featurizer()
 
@@ -86,26 +81,18 @@ if __name__ == "__main__":
             labels.append(line[kTARGET_FIELD])
 
     print("Label set: %s" % str(labels))
+    # x_train = feat.train_feature(x[kTEXT_FIELD] for x in train)
+    # x_test = feat.test_feature(x[kTEXT_FIELD] for x in test)
     x_train = feat.train_feature([" ".join([x[kTEXT_FIELD],x['page'],x['trope']]) for x in train])
     x_test = feat.test_feature([" ".join([x[kTEXT_FIELD],x['page'],x['trope']]) for x in test])
 
     y_train = array(list(labels.index(x[kTARGET_FIELD])
                          for x in train))
-
-    print(len(train), len(y_train))
-    print(set(y_train))
-
+    y_test = array(list(labels.index(x[kTARGET_FIELD])
+                         for x in test))
     # Train classifier
     lr = SGDClassifier(loss='log', penalty='l2', shuffle=True)
     lr.fit(x_train, y_train)
-
     print(accuracy_score(y_train,lr.predict(x_train)))
-
+    print(accuracy_score(y_test,lr.predict(x_test)))
     feat.show_top10(lr, labels)
-
-    predictions = lr.predict(x_test)
-    o = DictWriter(open("predictions.csv", 'w'), ["id", "cat"])
-    o.writeheader()
-    for ii, pp in zip([x['id'] for x in test], predictions):
-        d = {'id': ii, 'cat': labels[pp]}
-        o.writerow(d)
