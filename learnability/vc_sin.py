@@ -1,3 +1,6 @@
+__author__ = "Ravi Bhadeshiya"
+__email__ = "ravib@terpmail.umd.edu"
+
 from math import pi, sin
 
 kSIMPLE_TRAIN = [(1, False), (2, True), (4, False), (5, True), (13, False),

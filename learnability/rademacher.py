@@ -1,8 +1,11 @@
+__author__ = "Ravi Bhadeshiya"
+__email__ = "ravib@terpmail.umd.edu"
+
 from random import randint, seed
 from collections import defaultdict
 from math import atan, sin, cos, pi
 
-from numpy import array
+from numpy import array, dot
 from numpy.linalg import norm
 
 from bst import BST
@@ -11,6 +14,9 @@ kSIMPLE_DATA = [(1., 1.), (2., 2.), (3., 0.), (4., 2.)]
 
 
 class Classifier:
+    def classify(self,point):
+        raise NotImplementedError()
+
     def correlation(self, data, labels):
         """
         Return the correlation between a label assignment and the predictions of
@@ -26,9 +32,9 @@ class Classifier:
             (len(data), len(labels))
 
         assert all(x == 1 or x == -1 for x in labels), "Labels must be binary"
-
-        # TODO: implement this function
-        return 0.0
+        # Convert classified data from bool (0,1) to -1,+1
+        prediction = [2*self.classify(itr)-1 for itr in data]
+        return dot(labels,prediction)/float(len(labels))
 
 
 class PlaneHypothesis(Classifier):
