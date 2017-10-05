@@ -5,7 +5,7 @@ from random import randint, seed
 from collections import defaultdict
 from math import atan, sin, cos, pi
 
-from numpy import array, dot
+from numpy import array, dot, unique, arctan2,spacing, single, tan, sort
 from numpy.linalg import norm
 
 from bst import BST
@@ -32,7 +32,7 @@ class Classifier:
             (len(data), len(labels))
 
         assert all(x == 1 or x == -1 for x in labels), "Labels must be binary"
-        # Convert classified data from bool (0,1) to -1,+1
+
         prediction = [2*self.classify(itr)-1 for itr in data]
         return dot(labels,prediction)/float(len(labels))
 
@@ -160,8 +160,17 @@ def origin_plane_hypotheses(dataset):
     """
 
     # TODO: Complete this function
+    dataset=array(dataset)
+    unique_angles = unique(sort(arctan2(dataset[:,1],dataset[:,0])))
 
-    yield OriginPlaneHypothesis(1.0, 0.0)
+    mean_slopes = [tan((unique_angles[i+1]+unique_angles[i])/2.0) for i in range(len(unique_angles)-1)]
+    mean_slopes.append(tan(unique_angles[-1]+spacing(single(1))))
+
+    hypothesis_positive_set = [[i, -1] for i in mean_slopes]
+    hypothesis_negative_set = [[-i, 1] for i in mean_slopes]
+
+    for i in hypothesis_positive_set+hypothesis_negative_set:
+        yield OriginPlaneHypothesis(i[0], i[1])
 
 def plane_hypotheses(dataset):
     """
