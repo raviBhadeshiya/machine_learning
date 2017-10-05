@@ -49,27 +49,27 @@ class TestLearnability(unittest.TestCase):
         self._full_shatter = [(1, 1), (-1, -1)]
         self._half_shatter = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
 
-    # def test_rec_single_point(self):
-    #     hyps = list(axis_aligned_hypotheses(self._2d[1]))
-    #     self.assertTrue(assign_exists(self._2d[1], hyps, [True]))
-    #     self.assertTrue(assign_exists(self._2d[1], hyps, [False]))
-    #
-    # def test_rec_two_points(self):
-    #     hyps = list(axis_aligned_hypotheses(self._2d[2]))
-    #     for pp in [[False, False], [False, True], [True, False], [True, True]]:
-    #         self.assertTrue(assign_exists(self._2d[2], hyps, pp))
-    #
-    # def test_rec_three_points(self):
-    #     hyps = list(axis_aligned_hypotheses(self._2d[3]))
-    #     for pp in [[False, False, False],
-    #                [False, True, False], [True, False, False], [False, False, True],
-    #                [True, True, False], [True, False, True],
-    #                [True, True, True]]:
-    #         self.assertTrue(assign_exists(self._2d[3], hyps, pp))
-    #
-    # def test_rec_four_points(self):
-    #     hyps = list(axis_aligned_hypotheses(self._2d[4]))
-    #     self.assertEqual(14, len(hyps))
+    def test_rec_single_point(self):
+        hyps = list(axis_aligned_hypotheses(self._2d[1]))
+        self.assertTrue(assign_exists(self._2d[1], hyps, [True]))
+        self.assertTrue(assign_exists(self._2d[1], hyps, [False]))
+
+    def test_rec_two_points(self):
+        hyps = list(axis_aligned_hypotheses(self._2d[2]))
+        for pp in [[False, False], [False, True], [True, False], [True, True]]:
+            self.assertTrue(assign_exists(self._2d[2], hyps, pp))
+
+    def test_rec_three_points(self):
+        hyps = list(axis_aligned_hypotheses(self._2d[3]))
+        for pp in [[False, False, False],
+                   [False, True, False], [True, False, False], [False, False, True],
+                   [True, True, False], [True, False, True],
+                   [True, True, True]]:
+            self.assertTrue(assign_exists(self._2d[3], hyps, pp))
+
+    def test_rec_four_points(self):
+        hyps = list(axis_aligned_hypotheses(self._2d[4]))
+        self.assertEqual(14, len(hyps))
 
     def test_plane_four_points(self):
         hyps = list(origin_plane_hypotheses(self._2d[4]))
@@ -90,24 +90,24 @@ class TestLearnability(unittest.TestCase):
 
         self.assertEqual(hyp.correlation(self._half_shatter, labels), -.5)
 
-    # def test_rad_estimate(self):
-    #     self.assertAlmostEqual(1.0, rademacher_estimate(self._full_shatter,
-    #                                                     self._hypotheses,
-    #                                                     num_samples=1000,
-    #                                                     random_seed=3),
-    #                            places=1)
-    #
-    #     self.assertAlmostEqual(0.0, rademacher_estimate([(0, 0)],
-    #                                                     constant_hypotheses,
-    #                                                     num_samples=1000,
-    #                                                     random_seed=3),
-    #                            places=1)
-    #
-    #     self.assertAlmostEqual(0.625, rademacher_estimate(self._half_shatter,
-    #                                                       self._hypotheses,
-    #                                                       num_samples=1000,
-    #                                                       random_seed=3),
-    #                            places=1)
+    def test_rad_estimate(self):
+        self.assertAlmostEqual(1.0, rademacher_estimate(self._full_shatter,
+                                                        self._hypotheses,
+                                                        num_samples=1000,
+                                                        random_seed=3),
+                               places=1)
+
+        self.assertAlmostEqual(0.0, rademacher_estimate([(0, 0)],
+                                                        constant_hypotheses,
+                                                        num_samples=1000,
+                                                        random_seed=3),
+                               places=1)
+
+        self.assertAlmostEqual(0.625, rademacher_estimate(self._half_shatter,
+                                                          self._hypotheses,
+                                                          num_samples=1000,
+                                                          random_seed=3),
+                               places=1)
 
 
     # def test_vc_one_point_pos(self):

@@ -1,14 +1,12 @@
 __author__ = "Ravi Bhadeshiya"
 __email__ = "ravib@terpmail.umd.edu"
 
+from itertools import combinations
+from operator import itemgetter
 from random import randint, seed
-from collections import defaultdict
-from math import atan, sin, cos, pi
-
-from numpy import array, dot, unique, arctan2,spacing, single, tan, sort
-from numpy.linalg import norm
 
 from bst import BST
+from numpy import array, dot, unique, arctan2, spacing, single, tan, sort
 
 kSIMPLE_DATA = [(1., 1.), (2., 2.), (3., 0.), (4., 2.)]
 
@@ -158,19 +156,20 @@ def origin_plane_hypotheses(dataset):
       dataset: The dataset to use to generate hypotheses
 
     """
-
-    # TODO: Complete this function
+    # DONE: Complete this function
     dataset=array(dataset)
     unique_angles = unique(sort(arctan2(dataset[:,1],dataset[:,0])))
 
-    mean_slopes = [tan((unique_angles[i+1]+unique_angles[i])/2.0) for i in range(len(unique_angles)-1)]
-    mean_slopes.append(tan(unique_angles[-1]+spacing(single(1))))
+    mean_slopes = [tan((unique_angles[itr+1]+unique_angles[itr])/2.0)
+                   for itr in range(len(unique_angles)-1)
+                   ]
+    mean_slopes.append(tan(unique_angles[-1]+spacing(single(1)))) # To handle extreme case
 
-    hypothesis_positive_set = [[i, -1] for i in mean_slopes]
-    hypothesis_negative_set = [[-i, 1] for i in mean_slopes]
+    hypothesis_set = [[[each, -1],[-each, 1]] for each in mean_slopes]
 
-    for i in hypothesis_positive_set+hypothesis_negative_set:
-        yield OriginPlaneHypothesis(i[0], i[1])
+    for each in hypothesis_set:
+        for one in each:
+            yield OriginPlaneHypothesis(one[0], one[1])
 
 def plane_hypotheses(dataset):
     """
@@ -200,9 +199,30 @@ def axis_aligned_hypotheses(dataset):
     Args:
       dataset: The dataset to use to generate hypotheses
     """
+    # DONE: complete this function
+    tree = BST()
+    [tree.insert(point) for point in dataset]
 
-    # TODO: complete this function
-    yield AxisAlignedRectangle(0, 0, 0, 0)
+    #Extreme condition
+    hypotheses_set=[AxisAlignedRectangle( float('inf'), float('inf'),
+                                          float('inf'), float('inf'))]
+
+    for itr in range(1,len(dataset)+1):
+        combinations_set = combinations(dataset,itr)
+
+        rectangles = [AxisAlignedRectangle(
+            min(each, key=itemgetter(0))[0], min(each, key=itemgetter(1))[1],
+            max(each, key=itemgetter(0))[0], max(each, key=itemgetter(1))[1])
+            for each in combinations_set]
+
+        for each in rectangles:
+            count= [1 for points in tree.range((each._x1,each._y1),(each._x2,each._y2))
+                     if each.classify(points.key)]
+
+            if sum(count) == itr: hypotheses_set.append(each) # Check validity
+
+    for each in hypotheses_set:
+        yield each
 
 
 def coin_tosses(number, random_seed=0):
@@ -235,15 +255,17 @@ def rademacher_estimate(dataset, hypothesis_generator, num_samples=500,
       num_samples: the number of samples to use in estimating the Rademacher
       correlation
     """
-
+    sum = 0.0
     for ii in range(num_samples):
         if random_seed != 0:
             rademacher = coin_tosses(len(dataset), random_seed + ii)
         else:
             rademacher = coin_tosses(len(dataset))
-
-        # TODO: complete this function
-    return 0.0
+        # DONE: complete this function
+        hypothesis_set = hypothesis_generator(dataset)
+        sum += max([each.correlation(dataset,rademacher)
+                    for each in hypothesis_set])
+    return sum/num_samples
 
 if __name__ == "__main__":
     print("Rademacher correlation of constant classifier %f" %
