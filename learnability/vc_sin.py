@@ -3,6 +3,8 @@ __email__ = "ravib@terpmail.umd.edu"
 
 from math import pi, sin
 
+from numpy import array
+
 kSIMPLE_TRAIN = [(1, False), (2, True), (4, False), (5, True), (13, False),
                  (14, True), (19, False)]
 
@@ -64,8 +66,9 @@ def train_sin_classifier(data):
     assert all(isinstance(x[1], bool) for x in data), \
         "All labels must be True / False"
 
-    # TODO: Compute a frequency that will correctly classify the dataset
-    frequency = 1.0
+    # DONE: Compute a frequency that will correctly classify the dataset
+    data = array(data)
+    frequency = 1.0 + sum((1.0 - data[:, 1]) * (2. ** data[:, 0]))
     return SinClassifier(frequency * pi)
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@ import unittest
 from rademacher import origin_plane_hypotheses, axis_aligned_hypotheses, \
     rademacher_estimate, kSIMPLE_DATA as rad_data, PlaneHypothesis, \
     constant_hypotheses
-
 from vc_sin import train_sin_classifier
 
 
@@ -109,40 +108,39 @@ class TestLearnability(unittest.TestCase):
                                                           random_seed=3),
                                places=1)
 
+    def test_vc_one_point_pos(self):
+        data_pos = [(1, False)]
 
-    # def test_vc_one_point_pos(self):
-    #     data_pos = [(1, False)]
-    #
-    #     classifier_pos = train_sin_classifier(data_pos)
-    #
-    #     for xx, yy in data_pos:
-    #         self.assertEqual(True if yy == +1 else False,
-    #                          classifier_pos.classify(xx))
-    #
-    # def test_vc_one_point_neg(self):
-    #     data_neg = [(1, True)]
-    #
-    #     classifier_neg = train_sin_classifier(data_neg)
-    #
-    #     for xx, yy in data_neg:
-    #         self.assertEqual(True if yy == +1 else False,
-    #                          classifier_neg.classify(xx))
-    #
-    # def test_vc_three_points(self):
-    #     data = [(1, False), (2, True), (3, False)]
-    #     classifier = train_sin_classifier(data)
-    #
-    #     for xx, yy in data:
-    #         self.assertEqual(True if yy == +1 else False,
-    #                          classifier.classify(xx))
-    #
-    # def test_vc_four_points(self):
-    #     data = [(1, False), (2, True), (3, False), (5, False)]
-    #     classifier = train_sin_classifier(data)
-    #
-    #     for xx, yy in data:
-    #         self.assertEqual(True if yy == +1 else False,
-    #                          classifier.classify(xx))
+        classifier_pos = train_sin_classifier(data_pos)
+
+        for xx, yy in data_pos:
+            self.assertEqual(True if yy == +1 else False,
+                             classifier_pos.classify(xx))
+
+    def test_vc_one_point_neg(self):
+        data_neg = [(1, True)]
+
+        classifier_neg = train_sin_classifier(data_neg)
+
+        for xx, yy in data_neg:
+            self.assertEqual(True if yy == +1 else False,
+                             classifier_neg.classify(xx))
+
+    def test_vc_three_points(self):
+        data = [(1, False), (2, True), (3, False)]
+        classifier = train_sin_classifier(data)
+
+        for xx, yy in data:
+            self.assertEqual(True if yy == +1 else False,
+                             classifier.classify(xx))
+
+    def test_vc_four_points(self):
+        data = [(1, False), (2, True), (3, False), (5, False)]
+        classifier = train_sin_classifier(data)
+
+        for xx, yy in data:
+            self.assertEqual(True if yy == +1 else False,
+                             classifier.classify(xx))
 
 if __name__ == '__main__':
     unittest.main()
