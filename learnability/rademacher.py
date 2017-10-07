@@ -6,13 +6,13 @@ from operator import itemgetter
 from random import randint, seed
 
 from bst import BST
-from numpy import array, dot, unique, arctan2, spacing, single, tan, sort
+from numpy import array, dot, unique, arctan2, spacing, single, tan, sort, ndarray
 
 kSIMPLE_DATA = [(1., 1.), (2., 2.), (3., 0.), (4., 2.)]
 
 
 class Classifier:
-    def classify(self,point):
+    def classify(self, point):
         raise NotImplementedError()
 
     def correlation(self, data, labels):
@@ -31,8 +31,8 @@ class Classifier:
 
         assert all(x == 1 or x == -1 for x in labels), "Labels must be binary"
 
-        prediction = [2*self.classify(itr)-1 for itr in data]
-        return dot(labels,prediction)/float(len(labels))
+        prediction = [2 * self.classify(itr) - 1 for itr in data]
+        return dot(labels, prediction) / float(len(labels))
 
 
 class PlaneHypothesis(Classifier):
@@ -60,7 +60,7 @@ class PlaneHypothesis(Classifier):
 
     def __str__(self):
         return "x: x_0 * %0.2f + x_1 * %0.2f >= %f" % \
-            (self._vector[0], self._vector[1], self._bias)
+               (self._vector[0], self._vector[1], self._bias)
 
 
 class OriginPlaneHypothesis(PlaneHypothesis):
@@ -68,6 +68,7 @@ class OriginPlaneHypothesis(PlaneHypothesis):
     A class that represents a decision boundary that must pass through the
     origin.
     """
+
     def __init__(self, x, y):
         """
         Create a decision boundary by specifying the normal vector to the
@@ -86,6 +87,7 @@ class AxisAlignedRectangle(Classifier):
     (inclusive of the boundary) is positive and everything else is negative.
 
     """
+
     def __init__(self, start_x, start_y, end_x, end_y):
         """
 
@@ -99,9 +101,9 @@ class AxisAlignedRectangle(Classifier):
           end_y: Top position
         """
         assert end_x >= start_x, "Cannot have negative length (%f vs. %f)" % \
-            (end_x, start_x)
+                                 (end_x, start_x)
         assert end_y >= start_y, "Cannot have negative height (%f vs. %f)" % \
-            (end_y, start_y)
+                                 (end_y, start_y)
 
         self._x1 = start_x
         self._y1 = start_y
@@ -115,12 +117,12 @@ class AxisAlignedRectangle(Classifier):
         Args:
           point: The point to classify
         """
-        return (point[0] >= self._x1 and point[0] <= self._x2) and \
-            (point[1] >= self._y1 and point[1] <= self._y2)
+        return (self._x1 <= point[0] <= self._x2) and \
+               (self._y1 <= point[1] <= self._y2)
 
     def __str__(self):
         return "(%0.2f, %0.2f) -> (%0.2f, %0.2f)" % \
-            (self._x1, self._y1, self._x2, self._y2)
+               (self._x1, self._y1, self._x2, self._y2)
 
 
 class ConstantClassifier(Classifier):
@@ -157,19 +159,24 @@ def origin_plane_hypotheses(dataset):
 
     """
     # DONE: Complete this function
-    dataset=array(dataset)
-    unique_angles = unique(sort(arctan2(dataset[:,1],dataset[:,0])))
+    if not isinstance(dataset, ndarray):
+        dataset = array(dataset)
 
-    mean_slopes = [tan((unique_angles[itr+1]+unique_angles[itr])/2.0)
-                   for itr in range(len(unique_angles)-1)
+    unique_angles = unique(sort(arctan2(dataset[:, 1], dataset[:, 0])))
+
+    mean_slopes = [tan((unique_angles[itr + 1] + unique_angles[itr]) / 2.0)
+                   for itr in range(len(unique_angles) - 1)
                    ]
-    mean_slopes.append(tan(unique_angles[-1]+spacing(single(1)))) # To handle extreme case
-
-    hypothesis_set = [[[each, -1],[-each, 1]] for each in mean_slopes]
-
-    for each in hypothesis_set:
-        for one in each:
+    mean_slopes.append(tan(unique_angles[-1] + spacing(single(1))))  # To handle extreme case
+    # hypothesis_set = [[[each, -1],[-each, 1]] for each in mean_slopes]
+    #
+    # for each in hypothesis_set:
+    #     for one in each:
+    #         yield OriginPlaneHypothesis(one[0], one[1])
+    for each in mean_slopes:
+        for one in [[each, -1], [-each, 1]]:
             yield OriginPlaneHypothesis(one[0], one[1])
+
 
 def plane_hypotheses(dataset):
     """
@@ -184,9 +191,30 @@ def plane_hypotheses(dataset):
       dataset: The dataset to use to generate hypotheses
 
     """
-
     # Complete this for extra credit
-    return
+    if isinstance(dataset, ndarray):
+        data = dataset.tolist()[:]
+    else:
+        data = dataset[:]  # copy data
+
+    while len(data) != 1:  # Loop over each and every data
+        new_origin = data.pop()  # Pop the each point from data
+        # Trick is to shift data to that point as origin
+        shifted_data = array(dataset)[:len(data)] - array([new_origin] * len(data))
+        # And Compute the origin plane hypotheses for that shifted data
+        unique_angles = unique(sort(arctan2(shifted_data[:, 1], shifted_data[:, 0])))
+
+        mean_slopes = [tan((unique_angles[itr + 1] + unique_angles[itr]) / 2.0)
+                       for itr in range(len(unique_angles) - 1)
+                       ]
+        mean_slopes.append(tan(unique_angles[-1] + spacing(single(1))))  # To handle extreme case
+        # y - new_originY = m(x-new_originX) + 0
+        #               y = m*x - m*new_originX + new_originY
+        #               y = m*x + c ; c = new_originY - m*new_originX
+        for each_slope in mean_slopes:
+            for one in [[each_slope, -1, new_origin[1] - each_slope * new_origin[0]],
+                        [-each_slope, 1, each_slope * new_origin[0] - new_origin[1]]]:
+                yield PlaneHypothesis(one[0], one[1], one[2])
 
 
 def axis_aligned_hypotheses(dataset):
@@ -200,26 +228,38 @@ def axis_aligned_hypotheses(dataset):
       dataset: The dataset to use to generate hypotheses
     """
     # DONE: complete this function
-    tree = BST()
-    [tree.insert(point) for point in dataset]
+    treeX = BST()
+    treeY = BST()
+    [(treeX.insert((point[0], point[1])), treeY.insert((point[1], point[0])))
+     for point in dataset]
 
-    #Extreme condition
-    hypotheses_set=[AxisAlignedRectangle( float('inf'), float('inf'),
-                                          float('inf'), float('inf'))]
+    hypotheses_set = [AxisAlignedRectangle(float('inf'), float('inf'),
+                                           float('inf'), float('inf'))]
 
-    for itr in range(1,len(dataset)+1):
-        combinations_set = combinations(dataset,itr)
+    for combination in range(1, len(dataset) + 1):
+        for each in combinations(dataset, combination):
+            point = (min(each, key=itemgetter(0))[0], min(each, key=itemgetter(1))[1],
+                     max(each, key=itemgetter(0))[0], max(each, key=itemgetter(1))[1])
 
-        rectangles = [AxisAlignedRectangle(
-            min(each, key=itemgetter(0))[0], min(each, key=itemgetter(1))[1],
-            max(each, key=itemgetter(0))[0], max(each, key=itemgetter(1))[1])
-            for each in combinations_set]
+            x = set([points.key for points in treeX.range((point[0], point[1]), (point[2], point[3]))])
+            y = set(
+                [(points.key[1], points.key[0]) for points in treeY.range((point[1], point[0]), (point[3], point[2]))])
+            # count= [1 for points in tree.range((each._x1,each._y1),(each._x2,each._y2))
+            #          if each.classify(points.key)]
+            if len(x & y) == combination: hypotheses_set.append(AxisAlignedRectangle(point[0], point[1],
+                                                                                     point[2], point[3]))
+            # rectangles = [(min(each, key=itemgetter(0))[0], min(each, key=itemgetter(1))[1],
+            #                max(each, key=itemgetter(0))[0], max(each, key=itemgetter(1))[1])
+            #               for each in combinations_set]
 
-        for each in rectangles:
-            count= [1 for points in tree.range((each._x1,each._y1),(each._x2,each._y2))
-                     if each.classify(points.key)]
-
-            if sum(count) == itr: hypotheses_set.append(each) # Check validity
+            # for each in rectangles:
+            #
+            #     x = set([points.key for points in treeX.range((each[0],each[1]),(each[2],each[3]))])
+            #     y = set([(points.key[1],points.key[0]) for points in treeY.range((each[1], each[0]), (each[3], each[2]))])
+            #     # count= [1 for points in tree.range((each._x1,each._y1),(each._x2,each._y2))
+            #     #          if each.classify(points.key)]
+            #     if len(x&y) == itr: hypotheses_set.append(AxisAlignedRectangle( each[0],each[1],
+            #                                                                     each[2],each[3])) # Check validity
 
     for each in hypotheses_set:
         yield each
@@ -263,9 +303,10 @@ def rademacher_estimate(dataset, hypothesis_generator, num_samples=500,
             rademacher = coin_tosses(len(dataset))
         # DONE: complete this function
         hypothesis_set = hypothesis_generator(dataset)
-        sum += max([each.correlation(dataset,rademacher)
+        sum += max([each.correlation(dataset, rademacher)
                     for each in hypothesis_set])
-    return sum/num_samples
+    return sum / num_samples
+
 
 if __name__ == "__main__":
     print("Rademacher correlation of constant classifier %f" %
@@ -274,3 +315,22 @@ if __name__ == "__main__":
           rademacher_estimate(kSIMPLE_DATA, axis_aligned_hypotheses))
     print("Rademacher correlation of plane classifier %f" %
           rademacher_estimate(kSIMPLE_DATA, origin_plane_hypotheses))
+    print("Rademacher correlation of extra plane classifier %f" %
+          rademacher_estimate(kSIMPLE_DATA, plane_hypotheses))
+
+    # pts = 50 * random.random((16, 2))
+    #
+    # t = time.process_time()
+    # print("Rademacher correlation of plane classifier %f" %
+    #       rademacher_estimate(pts, origin_plane_hypotheses,num_samples=1))
+    # print(time.process_time() - t)
+    #
+    # t = time.process_time()
+    # print("Rademacher correlation of extra plane classifier %f" %
+    #       rademacher_estimate(pts, plane_hypotheses,num_samples=1))
+    # print(time.process_time() - t)
+    #
+    # t = time.process_time()
+    # print("Rademacher correlation of rectangle classifier %f" %
+    #       rademacher_estimate(pts, axis_aligned_hypotheses,num_samples=1))
+    # print(time.process_time() - t)
