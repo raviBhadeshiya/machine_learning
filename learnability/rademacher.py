@@ -5,8 +5,9 @@ from itertools import combinations
 from operator import itemgetter
 from random import randint, seed
 
+import time
 from bst import BST
-from numpy import array, dot, unique, arctan2, spacing, single, tan, sort, ndarray
+from numpy import array, dot, unique, arctan2, spacing, single, tan, sort, ndarray, random
 
 kSIMPLE_DATA = [(1., 1.), (2., 2.), (3., 0.), (4., 2.)]
 
@@ -87,7 +88,6 @@ class AxisAlignedRectangle(Classifier):
     (inclusive of the boundary) is positive and everything else is negative.
 
     """
-
     def __init__(self, start_x, start_y, end_x, end_y):
         """
 
@@ -295,6 +295,8 @@ def rademacher_estimate(dataset, hypothesis_generator, num_samples=500,
       num_samples: the number of samples to use in estimating the Rademacher
       correlation
     """
+    hypothesis_set = hypothesis_generator(dataset)
+    hypothesis_set= [each for each in hypothesis_set]
     sum = 0.0
     for ii in range(num_samples):
         if random_seed != 0:
@@ -302,7 +304,6 @@ def rademacher_estimate(dataset, hypothesis_generator, num_samples=500,
         else:
             rademacher = coin_tosses(len(dataset))
         # DONE: complete this function
-        hypothesis_set = hypothesis_generator(dataset)
         sum += max([each.correlation(dataset, rademacher)
                     for each in hypothesis_set])
     return sum / num_samples
@@ -318,19 +319,20 @@ if __name__ == "__main__":
     print("Rademacher correlation of extra plane classifier %f" %
           rademacher_estimate(kSIMPLE_DATA, plane_hypotheses))
 
-    # pts = 50 * random.random((16, 2))
+    # pts = 100 * random.random((12, 2))
+    # #
     #
     # t = time.process_time()
     # print("Rademacher correlation of plane classifier %f" %
-    #       rademacher_estimate(pts, origin_plane_hypotheses,num_samples=1))
+    #       rademacher_estimate(pts, origin_plane_hypotheses))
     # print(time.process_time() - t)
     #
     # t = time.process_time()
     # print("Rademacher correlation of extra plane classifier %f" %
-    #       rademacher_estimate(pts, plane_hypotheses,num_samples=1))
+    #       rademacher_estimate(pts, plane_hypotheses))
     # print(time.process_time() - t)
-    #
+    # #
     # t = time.process_time()
     # print("Rademacher correlation of rectangle classifier %f" %
-    #       rademacher_estimate(pts, axis_aligned_hypotheses,num_samples=1))
+    #       rademacher_estimate(pts, axis_aligned_hypotheses))
     # print(time.process_time() - t)

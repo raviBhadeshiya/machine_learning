@@ -49,20 +49,20 @@ def worker(combination):
         if len(x & y) == combination: hypotheses_set.append((point[0], point[1],point[2], point[3]))
     return hypotheses_set
 
-def axis_aligned_hypotheses(dataset1):
-
-    global dataset = dataset1
-    [(treeX.insert((point[0],point[1])),treeY.insert((point[1],point[0])))
-     for point in dataset]
-
-    hypotheses_set = [[( float('inf'), float('inf'),float('inf'), float('inf'))]]
-
-    for combination in range(1,len(dataset)+1):
-        hypotheses_set = worker(combination, dataset, treeX, treeY)
-
-    for each in hypotheses_set:
-        for point in each:
-            yield AxisAlignedRectangle(point[0], point[1],point[2], point[3])
+# def axis_aligned_hypotheses(dataset1):
+#
+#     global dataset = dataset1
+#     [(treeX.insert((point[0],point[1])),treeY.insert((point[1],point[0])))
+#      for point in dataset]
+#
+#     hypotheses_set = [[( float('inf'), float('inf'),float('inf'), float('inf'))]]
+#
+#     for combination in range(1,len(dataset)+1):
+#         hypotheses_set = worker(combination, dataset, treeX, treeY)
+#
+#     for each in hypotheses_set:
+#         for point in each:
+#             yield AxisAlignedRectangle(point[0], point[1],point[2], point[3])
 
 
 
