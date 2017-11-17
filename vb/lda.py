@@ -170,9 +170,9 @@ class VariationalBayes:
 
     def update_alpha(self, current_alpha=None, gamma=None):
         """
-        Update the scalar parameter alpha based on a gamma matrix.  If
+        Update the-- scalar parameter alpha based on a gamma matrix.  If
         no gamma argument is supplied, use the current setting of
-        gamma.
+        gamma
         """
 
         if current_alpha is None:
