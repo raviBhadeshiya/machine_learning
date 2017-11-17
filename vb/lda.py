@@ -5,7 +5,7 @@ VariationalBayes for Vanilla LDA
 from collections import defaultdict
 import time
 
-from numpy import log, exp, ones
+from numpy import log, exp, ones, sum
 import numpy
 
 import scipy
@@ -92,8 +92,8 @@ class VariationalBayes:
         # initialize a V-by-K matrix beta, valued at 1/V, subject to the sum
         # over every row is 1
         self._beta = numpy.random.gamma(100., 1. / 100.,
-                                       (self._num_topics, self._num_types))
-        #self._E_log_eta = compute_dirichlet_expectation(self._beta)
+                                        (self._num_topics, self._num_types))
+        # self._E_log_eta = compute_dirichlet_expectation(self._beta)
         self._iteration = 0
 
     @staticmethod
@@ -102,9 +102,8 @@ class VariationalBayes:
         Given gamma vector and complete beta, compute the phi for a word with a
         given count
         """
-
-        # TODO: Complete this function!
-        return ones(len(gamma)) / float(len(gamma))
+        phi = beta[:, word] * exp(digam(gamma)-digam(sum(gamma)))
+        return  (phi / sum(phi)) * count
 
     def e_step(self, local_parameter_iteration=50):
         """
@@ -127,7 +126,7 @@ class VariationalBayes:
             (self._alpha + float(self._num_types) / float(self._num_topics))
 
         # iterate over all documents
-        #for doc_id in range(number_of_documents):
+        # for doc_id in range(number_of_documents):
         for doc_id in numpy.random.permutation(number_of_documents):
             # compute the total number of words
             term_ids = word_ids[doc_id]
@@ -155,7 +154,8 @@ class VariationalBayes:
                 gamma[doc_id, :] = gamma_update
 
             if (doc_id + 1) % 1000 == 0:
-                print("Global iteration %i, doc %i" % (self._iteration, doc_id + 1))
+                print("Global iteration %i, doc %i" %
+                      (self._iteration, doc_id + 1))
 
         self._gamma = gamma
         return topic_counts
@@ -166,10 +166,7 @@ class VariationalBayes:
         the expected counts from the e step in the form of a matrix where each
         topic is a row.
         """
-
-        # TODO: Finish this function!
-        new_beta = self._beta
-        return new_beta
+        return topic_counts / sum(topic_counts, axis=1)[:, None]
 
     def update_alpha(self, current_alpha=None, gamma=None):
         """
@@ -207,8 +204,8 @@ class VariationalBayes:
 
         clock_m_step = time.time() - clock_m_step
 
-        print("Iteration %i\te_step %d sec, mstep %d sec" % \
-                (self._iteration, clock_e_step, clock_m_step))
+        print("Iteration %i\te_step %d sec, mstep %d sec" %
+              (self._iteration, clock_e_step, clock_m_step))
 
     def export_beta(self, exp_beta_path, top_display=10):
         """
@@ -231,6 +228,7 @@ class VariationalBayes:
                     break
 
         output.close()
+
 
 if __name__ == "__main__":
     import argparse
