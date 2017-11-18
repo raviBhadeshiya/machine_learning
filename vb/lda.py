@@ -5,12 +5,14 @@ VariationalBayes for Vanilla LDA
 from collections import defaultdict
 import time
 
-from numpy import log, exp, ones, sum
+from numpy import log, exp, ones, sum, mean
 import numpy
 
 import scipy
 import scipy.misc
-from scipy.special import psi as digam
+from scipy.special import psi as digam, polygamma
+
+dirichlet_log_E = lambda alpha:digam(alpha) - digam(numpy.sum(alpha))
 
 
 def parse_vocabulary(vocab):
@@ -181,9 +183,31 @@ class VariationalBayes:
             gamma = self._gamma
 
         # Update below line
-        new_alpha = current_alpha
+        # Refer to http://jonathan-huang.org/research/dirichlet/dirichlet.pdf
+        # https://github.com/piskvorky/gensim/blob/master/gensim/models/ldamodel.py
 
-        return new_alpha
+        row, col = gamma.shape
+
+        alpha_vec = numpy.zeros(col)
+        alpha_vec.fill(current_alpha)
+
+        # logphat = sum(dirichlet_log_E(g) for g in gamma) / row
+
+        logphat = sum(dirichlet_log_E(gamma),axis=0) / row
+
+        gradf = row * (digam(sum(alpha_vec)) - digam(alpha_vec) + logphat)
+
+        c = row * polygamma(1, sum(alpha_vec))
+        q = -row * polygamma(1, alpha_vec)
+        b = sum(gradf / q) / (1. / c + sum(1. / q))
+
+        dalpha = numpy.mean((gradf - b) / q)
+
+        updated_alpha = current_alpha - dalpha
+
+        print("Update alpha: {}".format(updated_alpha))
+        return updated_alpha if updated_alpha > 0 else current_alpha
+
 
     def run_iteration(self, local_iter, update_alpha=False):
         """
